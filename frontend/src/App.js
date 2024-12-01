@@ -19,7 +19,7 @@ function App() {
           <Route path="/voice-issue" element={<VoiceIssue />} />
           <Route path="/real-time" element={<RealTime />} />
           <Route path="/post-call" element={<PostCall />} />
-          <Route path="/" element={<Navigate replace to="/real-time" />} />
+          <Route path="/" element={<Navigate replace to="/voice-issue" />} />
         </Routes>
       </Router>
     </ThemeProvider>
