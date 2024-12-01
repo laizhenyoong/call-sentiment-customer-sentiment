@@ -1,0 +1,39 @@
+{
+    "template": {
+      "overallSummary": "Brief overview of the conversation",
+      "agentSummary": "Summary of agent's actions",
+      "customerSummary": "Summary of customer's concerns and requests",
+      "conversationalInsight": {
+        "customerSentiment": "Positive/Neutral/Negative",
+        "csatScore": 0,
+        "overallSentimentRating": "Positive/Neutral/Negative",
+        "conversationResult": "Outcome of the conversation",
+        "averageWaitingTime": null
+      },
+      "overallPerformance": 0,
+      "aiInsight": {
+        "introduction": 0,
+        "recommendation": 0,
+        "thankYouMessage": 0,
+        "attitude": 0,
+        "communicationSkills": 0
+      },
+      "timeConsumption": {
+        "agent": 0,
+        "customer": 0,
+        "notTalking": 0
+      },
+      "topicsDiscussed": {
+        "Topic1": 0,
+        "Topic2": 0,
+        "Topic3": 0,
+        "Topic4": 0
+      }
+    },
+    "instructions": [
+      "CSAT score and overall performance should be percentages (0-100).",
+      "Time consumption should be in seconds.",
+      "Topics discussed should be telco-related, with at least 4 topics and their percentages.",
+      "Provide the response as a valid JSON string, without any Markdown formatting."
+    ]
+  }

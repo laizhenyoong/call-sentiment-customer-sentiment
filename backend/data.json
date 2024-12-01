@@ -1,0 +1,30 @@
+{
+    "overallSummary": "The conversation involved the customer seeking guidance on switching their father's service from Maxis to Celcom, ultimately receiving detailed guidance on the process and related fees. The interaction ended positively with the customer expressing appreciation.",
+    "agentSummary": "The agent provided clear instructions on the porting process, addressed customer concerns regarding fees, offered alternatives to avoid immediate costs, and gave further assistance for ownership transfer and store locations.",
+    "customerSummary": "The customer initially inquired about porting their father's service and expressed confusion about the need for payment during porting. They sought clarification on the process and expressed a desire to change account ownership.",
+    "conversationalInsight": {
+        "csatScore": 90,
+        "conversationResult": "Customer received clear guidance",
+        "customerSentiment": "Positive",
+        "overallCallDuration": "00:02:30"
+    },
+    "overallPerformance": 85,
+    "aiInsight": {
+        "introduction": 90,
+        "recommendation": 80,
+        "thankYouMessage": 100,
+        "attitude": 95,
+        "communicationSkills": 90
+    },
+    "timeConsumption": {
+        "agent": 62,
+        "customer": 38,
+        "notTalking": 0
+    },
+    "topicsDiscussed": {
+        "Porting Process": 40,
+        "Fees and Charges": 25,
+        "Ownership Transfer": 20,
+        "Store Locations": 15
+    }
+}
