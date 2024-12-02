@@ -1,6 +1,7 @@
 // queryUtils.js
 const { Pinecone } = require('@pinecone-database/pinecone');
 const OpenAI = require('openai');
+const fs = require('fs');
 require('dotenv').config();
 
 // Initialize Pinecone Client
@@ -59,7 +60,24 @@ const queryOpenAI = async (queryText, context, systemContext) => {
     }
 };
 
+// Function to query OpenAI voice to text 
+const transcribeAudio = async (file) => {
+    try {
+        
+        const response = await openai.audio.transcriptions.create({
+            file: fs.createReadStream(file),
+            model: 'whisper-1',
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error('Error transcribing audio:', error);
+        return 'Error transcribing audio';
+    }
+};
+
 module.exports = {
     queryPinecone,
     queryOpenAI,
+    transcribeAudio,
 };

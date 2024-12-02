@@ -105,4 +105,25 @@ export const analyseData = async (chatData) => {
     console.error('Error analysing data:', error);
     throw error;
   }
-}
+};
+
+export const transcribeAndClassifyVoice = async (audioFile) => {
+  try {
+    const formData = new FormData();
+    formData.append('audioFile', audioFile, 'audio.wav');
+
+    const response = await fetch(`${API_BASE_URL}/transcribeAndClassify`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error transcribing and classifying voice:', error);
+    throw error;
+  }
+};

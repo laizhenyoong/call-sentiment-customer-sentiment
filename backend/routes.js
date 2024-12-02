@@ -1,8 +1,27 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { queryPinecone, queryOpenAI } = require('./utils/queryUtils');
+const multer = require('multer');
+const { queryPinecone, queryOpenAI, transcribeAudio } = require('./utils/queryUtils');
 const router = express.Router();
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// toFile function: saves the buffer data to a file
+const toFile = (buffer, fileName) => {
+    return new Promise((resolve, reject) => {
+        const filePath = path.join(__dirname, fileName); // Specify the file path where you want to save
+        fs.writeFile(filePath, buffer, (err) => {
+            if (err) {
+                reject(err); // Reject the promise if there's an error
+            } else {
+                resolve(filePath); // Resolve the promise with the file path
+            }
+        });
+    });
+};
 
 router.post('/adminSentiment', async (req, res) => {
     try {
@@ -192,6 +211,184 @@ router.post('/analyseData', async (req, res) => {
     } catch (error) {
         console.error('Error processing request:', error);
         res.status(500).json({ error: 'An error occurred while processing your request.' });
+    }
+});
+
+// Categorize customer issue
+router.post('/categorizeIssue', async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        const systemPrompt = `You are a helpful assistant that classifies customer inquiries for a telecom company. 
+            Here are the categories and subcategories for classification:
+            
+            Category: Account & Subscriptions
+              1) Change credit limit
+              2) Change postpaid plan
+              3) Rewards-related issue
+              4) Voicemail and missed call alerts activation/deactivation
+              5) Stop non-Digi/Celcom charges/subscriptions
+              6) Reinstate terminated prepaid line for CelcomDigi
+              7) Others
+  
+            Category: Call, Internet, SMS and OTP issues
+              1) Call quality 
+              2) Coverage
+              3) Internet slowness
+              4) Unable to receive OTP/TAC
+  
+            Category: Internet Quota
+              1) {Insert details}
+  
+            Category: Reload & Prepaid
+              1) Reload-related issue 
+              2) Others
+  
+            Category: Roaming
+              1) Unable to use/connect roaming
+              2) Others
+  
+            Category: Switching to CelcomDigi
+              1) Resubmit port-in request
+              2) Others
+  
+            Category: Billing
+              1) I don't agree with my bill (non-scam related)
+              2) I don't agree with my bill (suspected scam)
+              3) Others
+  
+            Category: Fibre
+              1) No service
+              2) Internet slowness (Fibre)
+              3) Others (Fibre)
+              4) Relocation request
+  
+            Category: Products & Offerings
+              1) {Provide details}
+  
+            Category: Report a scam/fraud
+              1) Scam call
+              2) SMS spam/SMS scam 
+              3) Scam URL/QR Code
+              4) Missed calls from international numbers
+  
+            Category: SIM & Devices
+              1) Blocked device due to non-payment of Digi bill
+              2) Others
+  
+            Classify the following inquiry into the most appropriate category and subcategory. Return the classification in the following format:
+            Category: <category>
+            Subcategory: <subcategory>`;
+
+        const aiMessage = await queryOpenAI(text, "", systemPrompt);
+
+        const [categoryLine, subcategoryLine] = aiMessage.split('\n');
+
+        const category = categoryLine.replace('Category: ', '').trim();
+        const subcategory = subcategoryLine.replace('Subcategory: ', '').trim();
+
+        // 2. Return
+        res.status(200).json({
+            category: category,
+            subcategory: subcategory
+        });
+
+    } catch (error) {
+        console.error('Error processing request:', error);
+        res.status(500).json({ error: 'An error occurred while processing your request.' });
+    }
+});
+
+// Transcribe voice to text
+router.post('/transcribeAndClassify', upload.single('audioFile'), async (req, res) => {
+    try {
+        // Check if file exists
+        if (!req.file) {
+            return res.status(400).json({ error: 'No audio file uploaded' });
+        }
+
+        const file = await toFile(Buffer.from(req.file.buffer), 'audio.mp3');
+
+        // Transcribe audio
+        const transcription = await transcribeAudio(file);
+
+        // Classify transcribed text'../utils/api'
+        const systemPrompt = `You are a helpful assistant that classifies customer inquiries for a telecom company. 
+            Here are the categories and subcategories for classification:
+            
+            Category: Account & Subscriptions
+              1) Change credit limit
+              2) Change postpaid plan
+              3) Rewards-related issue
+              4) Voicemail and missed call alerts activation/deactivation
+              5) Stop non-Digi/Celcom charges/subscriptions
+              6) Reinstate terminated prepaid line for CelcomDigi
+              7) Others
+  
+            Category: Call, Internet, SMS and OTP issues
+              1) Call quality 
+              2) Coverage
+              3) Internet slowness
+              4) Unable to receive OTP/TAC
+  
+            Category: Internet Quota
+              1) {Insert details}
+  
+            Category: Reload & Prepaid
+              1) Reload-related issue 
+              2) Others
+  
+            Category: Roaming
+              1) Unable to use/connect roaming
+              2) Others
+  
+            Category: Switching to CelcomDigi
+              1) Resubmit port-in request
+              2) Others
+  
+            Category: Billing
+              1) I don't agree with my bill (non-scam related)
+              2) I don't agree with my bill (suspected scam)
+              3) Others
+  
+            Category: Fibre
+              1) No service
+              2) Internet slowness (Fibre)
+              3) Others (Fibre)
+              4) Relocation request
+  
+            Category: Products & Offerings
+              1) {Provide details}
+  
+            Category: Report a scam/fraud
+              1) Scam call
+              2) SMS spam/SMS scam 
+              3) Scam URL/QR Code
+              4) Missed calls from international numbers
+  
+            Category: SIM & Devices
+              1) Blocked device due to non-payment of Digi bill
+              2) Others
+  
+            Classify the following inquiry into the most appropriate category and subcategory. Return the classification in the following format:
+            Category: <category>
+            Subcategory: <subcategory>`;
+
+        const aiMessage = await queryOpenAI(transcription, "", systemPrompt);
+
+        const [categoryLine, subcategoryLine] = aiMessage.split('\n');
+
+        const category = categoryLine.replace('Category: ', '').trim();
+        const subcategory = subcategoryLine.replace('Subcategory: ', '').trim();
+
+        // Return both transcription and classification
+        res.status(200).json({
+            transcript: transcription,
+            classification: { category, subcategory }
+        });
+    } catch (error) {
+        console.error('Error processing voice issue:', error);
+        res.status(500).json({ error: 'An error occurred while processing the voice issue' });
     }
 });
 
